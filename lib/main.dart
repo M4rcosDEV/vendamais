@@ -17,7 +17,10 @@ void main() async {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
-    runApp(MyApp());
+    runApp(ChangeNotifierProvider(
+      create: (context) => MyAppState(),
+      child: MyApp(),
+    ),);
   } catch (e) {
     print('Ocorreu  um erro ao inicializar o Firebase: $e');
   }
@@ -44,6 +47,19 @@ class MyApp extends StatelessWidget {
 }
 
 class MyAppState extends ChangeNotifier {
+  String? _imagePath;
+
+  String? get imagePath => _imagePath;
+
+  void updateImage(XFile image) {
+    _imagePath = image.path; // Armazena o caminho da imagem
+    notifyListeners(); // Notifica os ouvintes sobre a alteração
+  }
+
+  XFile? _imageFile;
+  XFile? get imageFile => _imageFile;
+
+
   var current = WordPair.random();
   void getNext() {
     current = WordPair.random();
@@ -75,15 +91,6 @@ class MyAppState extends ChangeNotifier {
     favoritos.remove(pair);
     print('Nome removido : $pair');
 
-    notifyListeners();
-  }
-
-  XFile? _imageFile;
-
-  XFile? get imageFile => _imageFile;
-
-  void updateImage(XFile? image) {
-    _imageFile = image;
     notifyListeners();
   }
 }

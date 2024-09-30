@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../main.dart';
@@ -20,7 +22,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final imageFile = Provider.of<MyAppState>(context).imageFile;
+    String? imagePath = Provider.of<MyAppState>(context).imagePath;
 
     return LayoutBuilder(builder: (context, constraints) {
       return Scaffold(
@@ -46,16 +48,51 @@ class _MyHomePageState extends State<MyHomePage> {
         drawer: Drawer(
           child: ListView(padding: EdgeInsets.zero, children: <Widget>[
             DrawerHeader(
+              padding: EdgeInsets.all(0),
               decoration:
                   BoxDecoration(color: const Color.fromARGB(255, 15, 95, 161)),
-              child: GestureDetector(
-                onTap: () {},
-                child: CircleAvatar(
-                  radius: 50,
-                  child: imageFile == null
-                      ? const Icon(Icons.person, size: 50)
-                      : null,
-                ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  GestureDetector(
+                    onTap: () {},
+                    child: Column(
+                      children: [
+                        CircleAvatar(
+                          radius: 40,
+                          backgroundImage: imagePath != null &&
+                                  imagePath.isNotEmpty
+                              ? FileImage(File(imagePath))
+                              : const AssetImage('assets/images/profile.jpg')
+                                  as ImageProvider,
+                          child: (imagePath == null || imagePath.isEmpty)
+                              ? const Icon(Icons.person, size: 40)
+                              : null,
+                        ),
+                      ],
+                    ),
+                  ),
+                  Text(
+                    'Marcos Vinícius',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 15,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  SizedBox(height: 5),
+                  Text(
+                    'marcosifba01@gmail.com',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 15,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                  ),
+                ],
               ),
             ),
             ListTile(
@@ -67,20 +104,52 @@ class _MyHomePageState extends State<MyHomePage> {
               },
             ),
             ListTile(
-              leading: Icon(Icons.favorite),
-              title: Text('Favoritos'),
+              leading: Icon(Icons.sledding),
+              title: Text('Ainda to pensando'),
               onTap: () {
                 _pageController.jumpToPage(1);
                 Navigator.pop(context);
               },
             ),
-            ListTile(
-              leading: Icon(Icons.view_compact_rounded),
+            ExpansionTile(
+              shape: Border(
+                  right: BorderSide(
+                color: const Color.fromARGB(255, 0, 140, 255),
+              )),
+              leading: Icon(Icons.business),
               title: Text('Empresas'),
-              onTap: () {
-                _pageController.jumpToPage(2);
-                Navigator.pop(context);
-              },
+              children: <Widget>[
+                ListTile(
+                  leading: Icon(Icons.add),
+                  title: Text('Cadastrar Empresa'),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => Placeholder()),
+                    );
+                  },
+                ),
+                ListTile(
+                  leading: Icon(Icons.list),
+                  title: Text('Ver Empresas'),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => EmpresasPage()),
+                    );
+                  },
+                ),
+                ListTile(
+                  leading: Icon(Icons.bar_chart),
+                  title: Text('Relatórios'),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => Placeholder()),
+                    );
+                  },
+                ),
+              ],
             ),
             ListTile(
               leading: Icon(Icons.settings),
@@ -93,6 +162,7 @@ class _MyHomePageState extends State<MyHomePage> {
           ]),
         ),
         body: PageView(
+          physics: NeverScrollableScrollPhysics(),
           controller: _pageController,
           onPageChanged: (index) {
             setState(() {

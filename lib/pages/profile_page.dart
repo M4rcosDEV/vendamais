@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 
 import '../main.dart';
@@ -34,6 +35,12 @@ class _ProfilePageState extends State<ProfilePage> {
       setState(() {
         _imageFile = image; // Armazena a imagem escolhida
       });
+      
+      // Salvar a imagem localmente
+      final Directory directory = await getApplicationDocumentsDirectory();
+      final String newPath = '${directory.path}/${image.name}';
+      await File(image.path).copy(newPath);
+
       print('Image Path: ${image.path}'); // Exibe o caminho da imagem
       Provider.of<MyAppState>(context, listen: false).updateImage(image);
     } else {
