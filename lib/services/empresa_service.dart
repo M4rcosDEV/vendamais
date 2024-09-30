@@ -10,7 +10,8 @@ class EmpresaService {
   EmpresaService({this.baseUrl = 'https://www.receitaws.com.br/v1/cnpj/'});
 
   Future<EmpresaModel?> buscarEmpresaPorCNPJ(String cnpj) async {
-    final url = '$baseUrl$cnpj';
+    String formattedCNPJ = cnpj.replaceAll(RegExp(r'[^0-9]'), '');
+    final url = '$baseUrl$formattedCNPJ';
 
     try {
       final response = await http.get(Uri.parse(url));
