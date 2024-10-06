@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "683178360201",
+    "project_id": "venda-mais-83ea9",
+    "storage_bucket": "venda-mais-83ea9.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:683178360201:android:1f09543daa4f6ed68ef558",
+        "android_client_info": {
+          "package_name": "com.android.vendamais"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAPCr-pi1btrQggAymYp9bxe5b_zqkgItY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:683178360201:android:a54b681fd96106e18ef558",
+        "android_client_info": {
+          "package_name": "com.example.flutter_firebase_storage"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAPCr-pi1btrQggAymYp9bxe5b_zqkgItY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

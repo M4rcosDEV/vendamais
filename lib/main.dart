@@ -3,6 +3,11 @@ import 'package:english_words/english_words.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:vendamais/pages/login_page.dart';
+import 'package:flutter/services.dart';
+import 'package:vendamais/pages/signup_page.dart';
+
+import './services/amplify_service.dart';
 
 //Pages
 import './pages/home_page.dart';
@@ -11,16 +16,26 @@ import './pages/home_page.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 
+final AmplifyService amplifyService = AmplifyService();
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
   try {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
-    runApp(ChangeNotifierProvider(
-      create: (context) => MyAppState(),
-      child: MyApp(),
-    ),);
+
+    amplifyService.configureAmplify();
+    runApp(
+      ChangeNotifierProvider(
+        create: (context) => MyAppState(),
+        child: MyApp(),
+      ),
+    );
   } catch (e) {
     print('Ocorreu  um erro ao inicializar o Firebase: $e');
   }
@@ -40,7 +55,12 @@ class MyApp extends StatelessWidget {
           colorScheme: ColorScheme.fromSeed(
               seedColor: const Color.fromARGB(255, 15, 95, 161)),
         ),
-        home: MyHomePage(),
+        routes: {
+          '/': (_) => LoginPage(),
+          '/home': (_) => Placeholder(),
+          '/login': (_) => LoginPage(),
+          '/cadastrar': (_) => SignupPage(),
+        },
       ),
     );
   }
@@ -58,7 +78,6 @@ class MyAppState extends ChangeNotifier {
 
   XFile? _imageFile;
   XFile? get imageFile => _imageFile;
-
 
   var current = WordPair.random();
   void getNext() {

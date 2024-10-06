@@ -1,10 +1,13 @@
-import 'dart:io';
+import 'dart:io' show File;
 
+import 'package:amplify_flutter/amplify_flutter.dart';
+import 'package:amplify_storage_s3/amplify_storage_s3.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
-
+import 'package:vendamais/services/amplify_service.dart';
+import 'package:aws_common/vm.dart';
 import '../main.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -13,6 +16,8 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
+  final AmplifyService amplifyService = AmplifyService();
+
   final TextEditingController _nameController = TextEditingController();
 
   final TextEditingController _surnameController = TextEditingController();
@@ -28,24 +33,43 @@ class _ProfilePageState extends State<ProfilePage> {
   final ImagePicker _picker = ImagePicker();
 
   Future<void> _pickImage() async {
-    final XFile? image = await _picker.pickImage(
-        source: ImageSource.gallery); // Escolhe a imagem da galeria
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
 
-    if (image != null) {
-      setState(() {
-        _imageFile = image; // Armazena a imagem escolhida
-      });
-      
-      // Salvar a imagem localmente
-      final Directory directory = await getApplicationDocumentsDirectory();
-      final String newPath = '${directory.path}/${image.name}';
-      await File(image.path).copy(newPath);
+    if (image == null) {
+      safePrint('Nenhuma imagem selecionada');
+      return;
+    }
+    try {
+      // Fazer upload da imagem para o S3
+      final file = File(image.path);
+
+      final result = await Amplify.Storage.uploadFile(
+        localFile: AWSFile.fromPath(file.path),
+        path: StoragePath.fromString(
+            'user-profile/${file.uri.pathSegments.last}'),
+        onProgress: (progress) {
+          double progressValue =
+              (progress.transferredBytes / progress.totalBytes) * 100;
+
+          safePrint(
+              'Upando nas nuvens: ${progressValue.toStringAsFixed(2)}%'); // Acompanhe o progresso
+        },
+      ).result;
+
+      safePrint('Arquivo enviado com sucesso: ${result.uploadedItem.path}');
+      const String bucketName = 'vendamais7a802190a7bd4ab2b3232d43f4c078954b133-dev';
+
+      String region = 'sa-east-1'; // Região do seu bucket
+
+      String imageUrl =
+          'https://${bucketName}.s3.${region}.amazonaws.com/${result.uploadedItem.path}';
+          
+      print ('imageUrl : $imageUrl');
+
 
       print('Image Path: ${image.path}'); // Exibe o caminho da imagem
-      Provider.of<MyAppState>(context, listen: false).updateImage(image);
-    } else {
-      print(
-          'No image selected.'); // Mensagem caso nenhuma imagem seja escolhida
+    } on StorageException catch (e) {
+      safePrint(e.message);
     }
   }
 

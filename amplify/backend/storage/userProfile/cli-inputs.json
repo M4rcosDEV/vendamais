@@ -1,0 +1,18 @@
+{
+  "resourceName": "userProfile",
+  "policyUUID": "40778bc0",
+  "bucketName": "vendamais7a802190a7bd4ab2b3232d43f4c07895",
+  "storageAccess": "authAndGuest",
+  "guestAccess": [
+    "CREATE_AND_UPDATE",
+    "READ",
+    "DELETE"
+  ],
+  "authAccess": [
+    "CREATE_AND_UPDATE",
+    "READ",
+    "DELETE"
+  ],
+  "triggerFunction": "NONE",
+  "groupAccess": {}
+}

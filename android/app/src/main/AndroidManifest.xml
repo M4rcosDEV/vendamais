@@ -1,5 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           package="com.android.vendamais">
+
+           <uses-permission android:name="android.permission.INTERNET"/>
+           
     <application
         android:label="vendamais"
         android:name="${applicationName}"
@@ -31,6 +34,15 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+        
+        <!-- Configurações do Google Sign-In -->
+
+        <meta-data
+            android:name="com.google.android.gms.auth.api.signin.GOOGLE_SIGN_IN_OPTIONS"
+            android:resource="@xml/default_config"/>
+
+        <activity android:name="com.google.firebase.auth.api.internal.InternalAuthActivity" />
+
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and
