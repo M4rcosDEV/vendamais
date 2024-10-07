@@ -3,10 +3,9 @@ import 'package:flutter/material.dart';
 class ElevatedButtonBlue extends StatelessWidget {
   final String buttonText;
 
-  const ElevatedButtonBlue({
-    super.key,
-    required this.buttonText,
-  });
+  final String router;
+
+  const ElevatedButtonBlue({super.key, required this.buttonText, required this.router});
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +18,7 @@ class ElevatedButtonBlue extends StatelessWidget {
             const Color.fromARGB(255, 255, 255, 255).withOpacity(0.5)),
       ),
       onPressed: () {
-        // Navigate to a new route
+        Navigator.of(context).pushNamed('/$router');
       },
       child: Text(
         buttonText,

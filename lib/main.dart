@@ -57,7 +57,7 @@ class MyApp extends StatelessWidget {
         ),
         routes: {
           '/': (_) => LoginPage(),
-          '/home': (_) => Placeholder(),
+          '/home': (_) => MyHomePage(),
           '/login': (_) => LoginPage(),
           '/cadastrar': (_) => SignupPage(),
         },

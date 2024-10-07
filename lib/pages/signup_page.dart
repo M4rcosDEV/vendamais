@@ -199,7 +199,7 @@ class _SignupPageState extends State<SignupPage> {
                   ),
                 ),
                 SizedBox(height: 13),
-                ElevatedButtonBlue(buttonText: 'Cadastrar'),
+                ElevatedButtonBlue(buttonText: 'Cadastrar', router: 'home',),
                 SizedBox(height: 20),
                 TextButton(
                   onPressed: () {
