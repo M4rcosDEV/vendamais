@@ -5,6 +5,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:vendamais/services/auth_google_service.dart';
 import 'package:vendamais/widgets/button_blue_elevated.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -14,7 +15,40 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   bool _isObscure = true;
   bool isLoading = false;
-  final AuthGoogleService authService = AuthGoogleService();
+
+  Future<UserCredential> signInWithGoogle() async {
+    final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+
+    final GoogleSignInAuthentication? googleAuth =
+        await googleUser?.authentication;
+
+    final credential = GoogleAuthProvider.credential(
+      accessToken: googleAuth?.accessToken,
+      idToken: googleAuth?.idToken,
+    );
+    return await FirebaseAuth.instance.signInWithCredential(credential);
+  }
+
+  void _showErrorDialog(Object message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Erro'),
+          content: Text(
+              'Mermao trabalho da porra é esse gugli, Nome do erro:  $message'),
+          actions: <Widget>[
+            TextButton(
+              child: Text('Fechar'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -121,7 +155,10 @@ class _LoginPageState extends State<LoginPage> {
                   child: Text('Esqueceu sua senha ?',
                       style: TextStyle(color: Colors.grey)),
                 ),
-                ElevatedButtonBlue(buttonText: 'Entrar'),
+                ElevatedButtonBlue(
+                  buttonText: 'Entrar',
+                  router: 'home',
+                ),
                 SizedBox(height: 20),
                 Text('Ou', style: TextStyle(color: Colors.grey, fontSize: 15)),
                 SizedBox(height: 20),
@@ -138,22 +175,29 @@ class _LoginPageState extends State<LoginPage> {
                           const Color.fromARGB(255, 255, 255, 255)
                               .withOpacity(0.5)),
                     ),
-                    onPressed: () async {
-                      setState(() {
-                        isLoading = true; // Iniciar o carregamento
-                      });
-                      User? user = await authService.signInWithGoogle(context);
-                      setState(() {
-                        isLoading = false; // Finalizar o carregamento
-                      });
-                      if (user != null) {
-                        // Usuário autenticado com sucesso
-                        print("Usuário logado: ${user.displayName}");
-                      } else {
-                        // Falha na autenticação
-                        print("Falha ao autenticar com Google");
-                      }
-                    },
+                    onPressed: isLoading
+                        ? null
+                        : () async {
+                            UserCredential? userCredential;
+                            try {
+                              userCredential = await signInWithGoogle();
+                              print(
+                                  "Usuário logado: ${userCredential.user?.email}");
+                            } catch (e) {
+                              // ignore: use_build_context_synchronously
+                              print(e);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                    content: Text(
+                                        'Falha ao autenticar com Google: $e')),
+                              );
+                              _showErrorDialog(e);
+                            } finally {
+                              setState(() {
+                                isLoading = false; // Finalizar o carregamento
+                              });
+                            }
+                          },
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [

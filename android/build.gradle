@@ -4,13 +4,9 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        implementation 'com.google.firebase:firebase-auth:21.0.1'
         classpath 'com.google.gms:google-services:4.3.10'
-        classpath 'com.android.tools.build:gradle:7.0.4'
+        // classpath 'com.android.tools.build:gradle:8.1.0'
         classpath 'com.google.firebase:firebase-core:17.2.0'
-        implementation platform('com.google.firebase:firebase-bom:31.1.0') // Use a versão mais recente do BOM
-        implementation 'com.google.firebase:firebase-auth'
-        implementation 'com.google.android.gms:play-services-auth'
 
     }
 }
