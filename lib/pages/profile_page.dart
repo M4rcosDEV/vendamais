@@ -57,15 +57,15 @@ class _ProfilePageState extends State<ProfilePage> {
       ).result;
 
       safePrint('Arquivo enviado com sucesso: ${result.uploadedItem.path}');
-      const String bucketName = 'vendamais7a802190a7bd4ab2b3232d43f4c078954b133-dev';
+      const String bucketName =
+          'vendamais7a802190a7bd4ab2b3232d43f4c078954b133-dev';
 
       String region = 'sa-east-1'; // Região do seu bucket
 
       String imageUrl =
           'https://${bucketName}.s3.${region}.amazonaws.com/${result.uploadedItem.path}';
-          
-      print ('imageUrl : $imageUrl');
 
+      print('imageUrl : $imageUrl');
 
       print('Image Path: ${image.path}'); // Exibe o caminho da imagem
     } on StorageException catch (e) {
@@ -79,7 +79,7 @@ class _ProfilePageState extends State<ProfilePage> {
       appBar: AppBar(
         iconTheme:
             IconThemeData(color: const Color.fromARGB(255, 255, 255, 255)),
-        backgroundColor: const Color.fromARGB(255, 15, 95, 161),
+        backgroundColor: Colors.blue,
         title: Text(
           'Perfil',
           style: TextStyle(fontSize: 20, color: Colors.white),
@@ -118,7 +118,6 @@ class _ProfilePageState extends State<ProfilePage> {
                 labelText: 'Nome',
               ),
             ),
-            // Campo de Apelido
             TextField(
               controller: _surnameController,
               decoration: InputDecoration(
