@@ -5,7 +5,8 @@ class ElevatedButtonBlue extends StatelessWidget {
 
   final String router;
 
-  const ElevatedButtonBlue({super.key, required this.buttonText, required this.router});
+  const ElevatedButtonBlue(
+      {super.key, required this.buttonText, required this.router});
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +19,28 @@ class ElevatedButtonBlue extends StatelessWidget {
             const Color.fromARGB(255, 255, 255, 255).withOpacity(0.5)),
       ),
       onPressed: () {
-        Navigator.of(context).pushNamed('/$router');
+        // Navigator.of(context).pushNamed('/$router');
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text('Erro'),
+              content: Text(
+                  'Rapaz tu ta achando que tem um desempregador aqui é ? Ainda to fazendo tenha calma'),
+              actions: <Widget>[
+                TextButton(
+                  child: Text('Fechar'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            );
+          },
+        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(
+                'Rapaz estou trabalhando nisso ainda, usa o google, é mais bonito')));
       },
       child: Text(
         buttonText,

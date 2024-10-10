@@ -1,11 +1,12 @@
-import 'package:amplify_flutter/amplify_flutter.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:provider/provider.dart';
+import 'package:vendamais/models/user_model.dart';
+import 'package:vendamais/providers/user_provider.dart';
 import 'package:vendamais/services/auth_google_service.dart';
 import 'package:vendamais/widgets/button_blue_elevated.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -13,42 +14,31 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+  final AuthGoogleService authGoogleService = AuthGoogleService();
+
   bool _isObscure = true;
   bool isLoading = false;
 
-  Future<UserCredential> signInWithGoogle() async {
-    final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-
-    final GoogleSignInAuthentication? googleAuth =
-        await googleUser?.authentication;
-
-    final credential = GoogleAuthProvider.credential(
-      accessToken: googleAuth?.accessToken,
-      idToken: googleAuth?.idToken,
-    );
-    return await FirebaseAuth.instance.signInWithCredential(credential);
-  }
-
-  void _showErrorDialog(Object message) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Erro'),
-          content: Text(
-              'Mermao trabalho da porra é esse gugli, Nome do erro:  $message'),
-          actions: <Widget>[
-            TextButton(
-              child: Text('Fechar'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
+  // void _showErrorDialog(Object message) {
+  //   showDialog(
+  //     context: context,
+  //     builder: (BuildContext context) {
+  //       return AlertDialog(
+  //         title: Text('Erro'),
+  //         content: Text(
+  //             'Mermao trabalho da porra é esse gugli, Nome do erro:  $message'),
+  //         actions: <Widget>[
+  //           TextButton(
+  //             child: Text('Fechar'),
+  //             onPressed: () {
+  //               Navigator.of(context).pop();
+  //             },
+  //           ),
+  //         ],
+  //       );
+  //     },
+  //   );
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -164,55 +154,84 @@ class _LoginPageState extends State<LoginPage> {
                 SizedBox(height: 20),
                 SizedBox(
                   width: 200,
-                  child: ElevatedButton(
-                    style: ButtonStyle(
-                      minimumSize: WidgetStateProperty.all(Size(200, 50)),
-                      backgroundColor: WidgetStateProperty.all(
-                          const Color.fromARGB(255, 255, 255, 255)),
-                      foregroundColor: WidgetStateProperty.all(
-                          const Color.fromARGB(255, 138, 138, 138)),
-                      overlayColor: WidgetStateProperty.all(
-                          const Color.fromARGB(255, 255, 255, 255)
-                              .withOpacity(0.5)),
-                    ),
-                    onPressed: isLoading
-                        ? null
-                        : () async {
-                            UserCredential? userCredential;
-                            try {
-                              userCredential = await signInWithGoogle();
-                              print(
-                                  "Usuário logado: ${userCredential.user?.email}");
-                            } catch (e) {
-                              // ignore: use_build_context_synchronously
-                              print(e);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                    content: Text(
-                                        'Falha ao autenticar com Google: $e')),
-                              );
-                              _showErrorDialog(e);
-                            } finally {
-                              setState(() {
-                                isLoading = false; // Finalizar o carregamento
-                              });
-                            }
-                          },
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        SvgPicture.asset(
-                          'lib/assets/icon-google.svg',
-                          height: 24,
+                  child: isLoading
+                      ? CircularProgressIndicator()
+                      : ElevatedButton(
+                          style: ButtonStyle(
+                            minimumSize: WidgetStateProperty.all(Size(200, 50)),
+                            backgroundColor: WidgetStateProperty.all(
+                                const Color.fromARGB(255, 255, 255, 255)),
+                            foregroundColor: WidgetStateProperty.all(
+                                const Color.fromARGB(255, 138, 138, 138)),
+                            overlayColor: WidgetStateProperty.all(
+                                const Color.fromARGB(255, 255, 255, 255)
+                                    .withOpacity(0.5)),
+                          ),
+                          onPressed: isLoading
+                              ? null
+                              : () async {
+                                  setState(() {
+                                    isLoading = true;
+                                  });
+
+                                  try {
+                                    UserCredential? userCredential =
+                                        await authGoogleService
+                                            .signInWithGoogle();
+                                    if (userCredential?.user != null) {
+                                      if (mounted) {
+                                        Provider.of<UserProvider>(context,
+                                                listen: false)
+                                            .setUser(
+                                          UserModel(
+                                            uid: userCredential?.user!.uid,
+                                            displayName: userCredential
+                                                ?.user!.displayName,
+                                            email: userCredential?.user!.email,
+                                            photoUrl:
+                                                userCredential?.user!.photoURL,
+                                          ),
+                                        );
+                                        Navigator.of(context)
+                                            .pushNamed('/home');
+                                        print(
+                                            'Usuário logado:  ${userCredential?.user?.displayName}');
+                                      }
+                                    }
+                                  } catch (e) {
+                                    print('Erro ao autenticar com Google: $e');
+                                    if (mounted) {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                              'Falha ao autenticar com Google: $e'),
+                                        ),
+                                      );
+                                    }
+                                  } finally {
+                                    if (mounted) {
+                                      setState(() {
+                                        isLoading = false;
+                                      });
+                                    }
+                                  }
+                                },
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              SvgPicture.asset(
+                                'lib/assets/icon-google.svg',
+                                height: 24,
+                              ),
+                              SizedBox(width: 10),
+                              Text(
+                                'Google',
+                                style: TextStyle(fontSize: 17),
+                              ),
+                            ],
+                          ),
                         ),
-                        SizedBox(width: 10),
-                        Text(
-                          'Google',
-                          style: TextStyle(fontSize: 17),
-                        ),
-                      ],
-                    ),
-                  ),
                 ),
                 SizedBox(height: 40),
                 TextButton(

@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../widgets/big_card.dart';
+import 'package:vendamais/providers/user_provider.dart';
 
 import '../main.dart';
 
 class GeneratorPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final user = Provider.of<UserProvider>(context).user;
     var appState = context.watch<MyAppState>();
     var pair = appState.current;
-
     IconData icon;
     if (appState.favoritos.contains(pair)) {
       icon = Icons.favorite;
@@ -21,7 +21,19 @@ class GeneratorPage extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          BigCard(pair: pair),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(user.displayName ?? 'Sem nome'),
+                  ],
+                ),
+              ),
+            ),
+          ),
           SizedBox(height: 10),
           Row(
             mainAxisSize: MainAxisSize.min,

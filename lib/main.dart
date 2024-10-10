@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:vendamais/pages/login_page.dart';
 import 'package:flutter/services.dart';
 import 'package:vendamais/pages/signup_page.dart';
+import 'package:vendamais/providers/user_provider.dart';
 
 import './services/amplify_service.dart';
 
@@ -31,8 +32,11 @@ void main() async {
 
     amplifyService.configureAmplify();
     runApp(
-      ChangeNotifierProvider(
-        create: (context) => MyAppState(),
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (_) => MyAppState()),
+          ChangeNotifierProvider(create: (_) => UserProvider()),
+        ],
         child: MyApp(),
       ),
     );
