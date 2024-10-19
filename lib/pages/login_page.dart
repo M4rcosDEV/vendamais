@@ -5,8 +5,8 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:vendamais/models/user_model.dart';
 import 'package:vendamais/providers/user_provider.dart';
+import 'package:vendamais/services/auth_email_password_service.dart';
 import 'package:vendamais/services/auth_google_service.dart';
-import 'package:vendamais/widgets/button_blue_elevated.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -15,30 +15,18 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   final AuthGoogleService authGoogleService = AuthGoogleService();
+  final AuthEmailPasswordService _authService = AuthEmailPasswordService();
+
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _emailResetController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
 
   bool _isObscure = true;
   bool isLoading = false;
 
-  // void _showErrorDialog(Object message) {
-  //   showDialog(
-  //     context: context,
-  //     builder: (BuildContext context) {
-  //       return AlertDialog(
-  //         title: Text('Erro'),
-  //         content: Text(
-  //             'Mermao trabalho da porra é esse gugli, Nome do erro:  $message'),
-  //         actions: <Widget>[
-  //           TextButton(
-  //             child: Text('Fechar'),
-  //             onPressed: () {
-  //               Navigator.of(context).pop();
-  //             },
-  //           ),
-  //         ],
-  //       );
-  //     },
-  //   );
-  // }
+  void _limparCampos() {
+    _emailResetController.clear();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -63,6 +51,7 @@ class _LoginPageState extends State<LoginPage> {
                   margin: EdgeInsets.all(10),
                   width: 300,
                   child: TextField(
+                    controller: _emailController,
                     decoration: InputDecoration(
                       contentPadding:
                           EdgeInsets.only(top: 20.0, bottom: 20.0, left: 60),
@@ -98,6 +87,7 @@ class _LoginPageState extends State<LoginPage> {
                   margin: EdgeInsets.all(10),
                   width: 300,
                   child: TextField(
+                    controller: _passwordController,
                     decoration: InputDecoration(
                       contentPadding:
                           EdgeInsets.only(top: 20.0, bottom: 20.0, left: 60),
@@ -141,13 +131,60 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 SizedBox(height: 20),
                 TextButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: Text('Redefinir senha'),
+                          content: TextField(
+                            controller: _emailResetController,
+                            decoration: InputDecoration(
+                              labelText: 'Email para recuperação',
+                              labelStyle: TextStyle(fontSize: 18),
+                            ),
+                          ),
+                          actions: <Widget>[
+                            TextButton(
+                              child: Text('Enviar'),
+                              onPressed: () {
+                                _authService.redefinirSenha(
+                                    context, _emailResetController.text);
+
+                                _limparCampos();
+                              },
+                            ),
+                            TextButton(
+                              child: Text('Fechar'),
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  },
                   child: Text('Esqueceu sua senha ?',
                       style: TextStyle(color: Colors.grey)),
                 ),
-                ElevatedButtonBlue(
-                  buttonText: 'Entrar',
-                  router: 'home',
+                ElevatedButton(
+                  style: ButtonStyle(
+                    minimumSize: WidgetStateProperty.all(Size(200, 50)),
+                    backgroundColor: WidgetStateProperty.all(Colors.blue),
+                    foregroundColor: WidgetStateProperty.all(Colors.white),
+                    overlayColor: WidgetStateProperty.all(
+                        const Color.fromARGB(255, 255, 255, 255)
+                            .withOpacity(0.5)),
+                  ),
+                  onPressed: () async {
+                    _authService.loginUser(context, _emailController.text,
+                        _passwordController.text);
+                  },
+                  child: Text(
+                    'Entrar',
+                    style: TextStyle(fontSize: 17),
+                  ),
                 ),
                 SizedBox(height: 20),
                 Text('Ou', style: TextStyle(color: Colors.grey, fontSize: 15)),
@@ -155,7 +192,9 @@ class _LoginPageState extends State<LoginPage> {
                 SizedBox(
                   width: 200,
                   child: isLoading
-                      ? CircularProgressIndicator()
+                      ? Center(
+                          child: CircularProgressIndicator(),
+                        )
                       : ElevatedButton(
                           style: ButtonStyle(
                             minimumSize: WidgetStateProperty.all(Size(200, 50)),

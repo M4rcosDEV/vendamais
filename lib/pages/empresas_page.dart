@@ -17,6 +17,7 @@ class _EmpresasPageState extends State<EmpresasPage>
   final TextEditingController _cnpjController = TextEditingController();
   List<Map<String, dynamic>> empresas = [];
   List<bool> isExpanded = []; // Lista para controlar a expansão
+  bool isLoading = true;
 
   void _showErrorDialog() {
     showDialog(
@@ -131,6 +132,7 @@ class _EmpresasPageState extends State<EmpresasPage>
     setState(() {
       empresas = empresasList;
       isExpanded = List.generate(empresasList.length, (_) => false);
+      isLoading = false;
     });
   }
 
@@ -180,84 +182,90 @@ class _EmpresasPageState extends State<EmpresasPage>
               ),
               SizedBox(height: 20),
               Expanded(
-                child: empresas.isEmpty
-                    ? Center(child: Text("Nenhuma empresa encontrada."))
-                    : ListView.builder(
-                        itemCount: empresas.length,
-                        itemBuilder: (context, index) {
-                          final empresa = empresas[index];
-                          return Card(
-                            child: Column(
-                              children: [
-                                GestureDetector(
-                                  onTap: () => setState(() {
-                                    isExpanded[index] = !isExpanded[index];
-                                  }),
-                                  child: ListTile(
-                                    leading: Icon(
-                                      Icons.business,
-                                      color: Colors.blue,
+                child: isLoading
+                    ? Center(child: CircularProgressIndicator())
+                    : empresas.isEmpty
+                        ? Center(child: Text("Nenhuma empresa encontrada."))
+                        : ListView.builder(
+                            itemCount: empresas.length,
+                            itemBuilder: (context, index) {
+                              final empresa = empresas[index];
+                              return Card(
+                                child: Column(
+                                  children: [
+                                    GestureDetector(
+                                      onTap: () => setState(() {
+                                        isExpanded[index] = !isExpanded[index];
+                                      }),
+                                      child: ListTile(
+                                        leading: Icon(
+                                          Icons.business,
+                                          color: Colors.blue,
+                                        ),
+                                        title: Text(
+                                          empresa['nome'] ?? 'N/A',
+                                          style: TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold),
+                                        ),
+                                        subtitle: Text(
+                                            'CNPJ: ${empresa['id'] ?? 'N/A'}'),
+                                        trailing: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            IconButton(
+                                                onPressed: () =>
+                                                    _showDeleteDialog(
+                                                        empresa['nome'],
+                                                        empresa['id']),
+                                                icon: Icon(
+                                                  Icons.delete,
+                                                  color: const Color.fromARGB(
+                                                      255, 255, 1, 1),
+                                                )),
+                                          ],
+                                        ),
+                                      ),
                                     ),
-                                    title: Text(
-                                      empresa['nome'] ?? 'N/A',
-                                      style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold),
+                                    AnimatedSize(
+                                      duration:
+                                          const Duration(milliseconds: 300),
+                                      child: isExpanded[index]
+                                          ? Padding(
+                                              padding:
+                                                  const EdgeInsets.all(8.0),
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                      'CNPJ: ${empresa['id'] ?? 'N/A'}'),
+                                                  Text(
+                                                      'Logradouro: ${empresa['logradouro'] ?? 'N/A'}'),
+                                                  Text(
+                                                      'Número: ${empresa['numero'] ?? 'N/A'}'),
+                                                  Text(
+                                                      'Bairro: ${empresa['bairro'] ?? 'N/A'}'),
+                                                  Text(
+                                                      'Município: ${empresa['municipio'] ?? 'N/A'}'),
+                                                  Text(
+                                                      'UF: ${empresa['uf'] ?? 'N/A'}'),
+                                                  Text(
+                                                      'CEP: ${empresa['cep'] ?? 'N/A'}'),
+                                                  Text(
+                                                      'Telefone: ${empresa['telefone'] ?? 'N/A'}'),
+                                                  Text(
+                                                      'Email: ${empresa['email'] ?? 'N/A'}'),
+                                                ],
+                                              ),
+                                            )
+                                          : Container(),
                                     ),
-                                    subtitle:
-                                        Text('CNPJ: ${empresa['id'] ?? 'N/A'}'),
-                                    trailing: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        IconButton(
-                                            onPressed: () => _showDeleteDialog(
-                                                empresa['nome'], empresa['id']),
-                                            icon: Icon(
-                                              Icons.delete,
-                                              color: const Color.fromARGB(
-                                                  255, 255, 1, 1),
-                                            )),
-                                      ],
-                                    ),
-                                  ),
+                                  ],
                                 ),
-                                AnimatedSize(
-                                  duration: const Duration(milliseconds: 300),
-                                  child: isExpanded[index]
-                                      ? Padding(
-                                          padding: const EdgeInsets.all(8.0),
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                  'CNPJ: ${empresa['id'] ?? 'N/A'}'),
-                                              Text(
-                                                  'Logradouro: ${empresa['logradouro'] ?? 'N/A'}'),
-                                              Text(
-                                                  'Número: ${empresa['numero'] ?? 'N/A'}'),
-                                              Text(
-                                                  'Bairro: ${empresa['bairro'] ?? 'N/A'}'),
-                                              Text(
-                                                  'Município: ${empresa['municipio'] ?? 'N/A'}'),
-                                              Text(
-                                                  'UF: ${empresa['uf'] ?? 'N/A'}'),
-                                              Text(
-                                                  'CEP: ${empresa['cep'] ?? 'N/A'}'),
-                                              Text(
-                                                  'Telefone: ${empresa['telefone'] ?? 'N/A'}'),
-                                              Text(
-                                                  'Email: ${empresa['email'] ?? 'N/A'}'),
-                                            ],
-                                          ),
-                                        )
-                                      : Container(),
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                      ),
+                              );
+                            },
+                          ),
               ),
             ],
           ),

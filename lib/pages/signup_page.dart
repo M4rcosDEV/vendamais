@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
-import 'package:vendamais/widgets/button_blue_elevated.dart';
+import 'package:vendamais/services/auth_email_password_service.dart';
 
 class SignupPage extends StatefulWidget {
   @override
@@ -8,15 +8,53 @@ class SignupPage extends StatefulWidget {
 }
 
 class _SignupPageState extends State<SignupPage> {
+  final AuthEmailPasswordService _authService = AuthEmailPasswordService();
+
   bool _isObscure = true;
+  bool isLoading = false;
 
   final TextEditingController _userNameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController =TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
 
   @override
   Widget build(BuildContext context) {
+    // Future<void> cadastrarUser(String nome, String email, String senha) async {
+    //   try {
+    //     setState(() {
+    //       isLoading = true;
+    //     });
+
+    //     // ignore: unused_local_variable
+    //     UserCredential userCredential = await FirebaseAuth.instance
+    //         .createUserWithEmailAndPassword(email: email, password: senha);
+    //     Navigator.of(context).pushNamed('/home');
+    //   } on FirebaseAuthException catch (e) {
+    //     if (e.code == 'weak-password') {
+    //       // ignore: use_build_context_synchronously
+    //       ScaffoldMessenger.of(context).showSnackBar(
+    //         SnackBar(
+    //           content: Text('Senha muito fraca'),
+    //         ),
+    //       );
+    //       print('Senha muito fraca');
+    //     } else if (e.code == 'email-already-in-use') {
+    //       ScaffoldMessenger.of(context).showSnackBar(
+    //         SnackBar(
+    //           content: Text('Email já existe'),
+    //         ),
+    //       );
+    //       print('Email já existe');
+    //     }
+    //   } finally {
+    //     setState(() {
+    //       isLoading = false;
+    //     });
+    //   }
+    // }
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -199,7 +237,27 @@ class _SignupPageState extends State<SignupPage> {
                   ),
                 ),
                 SizedBox(height: 13),
-                ElevatedButtonBlue(buttonText: 'Cadastrar', router: 'home',),
+                ElevatedButton(
+                  style: ButtonStyle(
+                    minimumSize: WidgetStateProperty.all(Size(200, 50)),
+                    backgroundColor: WidgetStateProperty.all(Colors.blue),
+                    foregroundColor: WidgetStateProperty.all(Colors.white),
+                    overlayColor: WidgetStateProperty.all(
+                        const Color.fromARGB(255, 255, 255, 255)
+                            .withOpacity(0.5)),
+                  ),
+                  onPressed: () async {
+                    _authService.cadastrarUser(
+                        context,
+                        _userNameController.text,
+                        _emailController.text,
+                        _passwordController.text);
+                  },
+                  child: Text(
+                    'Cadastrar',
+                    style: TextStyle(fontSize: 17),
+                  ),
+                ),
                 SizedBox(height: 20),
                 TextButton(
                   onPressed: () {
