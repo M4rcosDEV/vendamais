@@ -26,7 +26,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    String? imagePath = Provider.of<MyAppState>(context).imagePath;
+    //String? imagePath = Provider.of<MyAppState>(context).imagePath;
     final user = Provider.of<UserProvider>(context).user;
     return LayoutBuilder(builder: (context, constraints) {
       return Scaffold(
@@ -63,14 +63,15 @@ class _MyHomePageState extends State<MyHomePage> {
                       child: Column(
                         children: [
                           CircleAvatar(
-                            radius: 40,
-                            backgroundImage: user.photoUrl != null
-                                ? NetworkImage(user.photoUrl ?? 'Sem img')
-                                : null,
-                            child: user.photoUrl != null
-                                ? null
-                                : const Icon(Icons.person, size: 40),
-                          ),
+                              radius: 40,
+                              backgroundImage: user.photoUrl != null &&
+                                      user.photoUrl!.isNotEmpty
+                                  ? NetworkImage(user.photoUrl!)
+                                  : null,
+                              child: user.photoUrl == null ||
+                                      user.photoUrl!.isEmpty
+                                  ? const Icon(Icons.person, size: 40)
+                                  : null),
                         ],
                       ),
                     ),
@@ -170,9 +171,9 @@ class _MyHomePageState extends State<MyHomePage> {
                     style: TextStyle(
                       color: const Color.fromARGB(183, 255, 17, 0),
                     )),
-                onTap: () {
-                  Navigator.of(context).pushNamed('/login');
-                  authGoogleService.signOutGoogle();
+                onTap: () async {
+                  await authGoogleService.signOutGoogle();
+                  Navigator.of(context).pushReplacementNamed('/login');
                 },
               ),
             ]),
@@ -188,7 +189,7 @@ class _MyHomePageState extends State<MyHomePage> {
           },
           children: [
             GeneratorPage(),
-            FavoritesPage(),
+            //FavoritesPage(),
             EmpresasPage(),
             SettingsPage(),
           ],

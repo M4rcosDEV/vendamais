@@ -251,7 +251,9 @@ class _SignupPageState extends State<SignupPage> {
                         context,
                         _userNameController.text,
                         _emailController.text,
-                        _passwordController.text);
+                        _passwordController.text,
+                        _confirmPasswordController.text
+                    );
                   },
                   child: Text(
                     'Cadastrar',

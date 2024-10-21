@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vendamais/models/user_model.dart';
 import 'package:vendamais/providers/user_provider.dart';
 import 'package:vendamais/services/auth_email_password_service.dart';
@@ -26,6 +27,42 @@ class _LoginPageState extends State<LoginPage> {
 
   void _limparCampos() {
     _emailResetController.clear();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _checkUserLoginStatus();
+    _checkUserLoginStatusEmailAndPassword();
+  }
+
+  Future<void> _checkUserLoginStatus() async {
+    bool isLoggedIn = await authGoogleService.isUserLoggedIn();
+    if (isLoggedIn) {
+      UserModel? userModel = await authGoogleService.loadUserData();
+      if (userModel != null) {
+        Provider.of<UserProvider>(context, listen: false).setUser(userModel);
+        Navigator.of(context).pushReplacementNamed('/home');
+      }
+    }
+  }
+
+  Future<void> _checkUserLoginStatusEmailAndPassword() async {
+    final prefs = await SharedPreferences.getInstance();
+    final AuthEmailPasswordService _authService = AuthEmailPasswordService();
+
+    bool isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
+
+    if (isLoggedIn) {
+      // Carrega os dados do usuário do SharedPreferences
+      UserModel? userModel = await _authService.loadUserData();
+      if (userModel != null) {
+        // Atualiza o UserProvider com os dados do usuário
+        Provider.of<UserProvider>(context, listen: false).setUser(userModel);
+        // Redireciona para a tela principal
+        Navigator.of(context).pushReplacementNamed('/home');
+      }
+    }
   }
 
   @override
