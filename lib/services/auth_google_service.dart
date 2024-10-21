@@ -1,50 +1,100 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:vendamais/models/user_model.dart';
 
 class AuthGoogleService {
   final GoogleSignIn googleSignIn = GoogleSignIn();
 
-Future<UserCredential?> signInWithGoogle() async {
-  try {
-    // Realiza o login com o Google
-    final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+  Future<UserCredential?> signInWithGoogle() async {
+    try {
+      // Realiza o login com o Google
+      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
 
-    if (googleUser == null) {
-      // O login foi cancelado pelo usuário
-      return null;
+      if (googleUser == null) {
+        // O login foi cancelado pelo usuário
+        return null;
+      }
+
+      // Autentica o usuário com o Google
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+
+      // Cria a credencial para o Firebase
+      final OAuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      UserCredential userCredential =
+          await FirebaseAuth.instance.signInWithCredential(credential);
+
+      // Salva o estado de login e informações do usuário
+      await _saveUserData(userCredential);
+
+      // Faz login no Firebase com a credencial do Google
+      return userCredential;
+    } catch (e) {
+      print('Erro ao fazer login com o Google: $e');
+      return null; // Trate o erro como achar melhor
+    }
+  }
+
+  Future<void> signOutGoogle() async {
+    try {
+      // Faz o logout do Google
+      await googleSignIn.signOut();
+
+      // Faz o logout do Firebase também
+      await FirebaseAuth.instance.signOut();
+
+      // Remove as informações do usuário salvas localmente
+      await _clearUserData();
+
+      print("Usuário desconectado do Google e Firebase");
+    } catch (e) {
+      print('Erro ao fazer logout: $e');
+    }
+  }
+
+  Future<void> _saveUserData(UserCredential userCredential) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('user_uid', userCredential.user?.uid ?? '');
+    await prefs.setString(
+        'user_displayName', userCredential.user?.displayName ?? '');
+    await prefs.setString('user_email', userCredential.user?.email ?? '');
+    await prefs.setString('user_photoUrl', userCredential.user?.photoURL ?? '');
+    await prefs.setBool('isLoggedIn', true);
+  }
+
+  Future<void> _clearUserData() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear(); // Limpa todas as informações do usuário
+  }
+
+  Future<bool> isUserLoggedIn() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('isLoggedIn') ?? false;
+  }
+
+  Future<UserModel?> loadUserData() async {
+    final prefs = await SharedPreferences.getInstance();
+    String? uid = prefs.getString('user_uid');
+    String? displayName = prefs.getString('user_displayName');
+    String? email = prefs.getString('user_email');
+    String? photoUrl = prefs.getString('user_photoUrl');
+
+    if (uid != null) {
+      return UserModel(
+        uid: uid,
+        displayName: displayName,
+        email: email,
+        photoUrl: photoUrl,
+      );
     }
 
-    // Autentica o usuário com o Google
-    final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-
-    // Cria a credencial para o Firebase
-    final OAuthCredential credential = GoogleAuthProvider.credential(
-      accessToken: googleAuth.accessToken,
-      idToken: googleAuth.idToken,
-    );
-
-    // Faz login no Firebase com a credencial do Google
-    return await FirebaseAuth.instance.signInWithCredential(credential);
-  } catch (e) {
-    print('Erro ao fazer login com o Google: $e');
-    return null; // Trate o erro como achar melhor
+    return null; // Retorna null se não houver dados de usuário salvos
   }
-}
-
-Future<void> signOutGoogle() async {
-  try {
-    // Faz o logout do Google
-    await googleSignIn.signOut();
-
-    // Faz o logout do Firebase também
-    await FirebaseAuth.instance.signOut();
-
-    print("Usuário desconectado do Google e Firebase");
-  } catch (e) {
-    print('Erro ao fazer logout: $e');
-  }
-}
-
 }
 //   Future<User?> signInWithGoogle(BuildContext context) async {
 //     try {

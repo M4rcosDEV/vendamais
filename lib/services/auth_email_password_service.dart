@@ -1,44 +1,90 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vendamais/models/user_model.dart';
 import 'package:vendamais/providers/user_provider.dart';
+import 'package:vendamais/services/prefs_auth_service.dart';
 
 class AuthEmailPasswordService {
-  Future<void> cadastrarUser(
-      BuildContext context, String nome, String email, String senha) async {
-    try {
-      UserCredential userCredential = await FirebaseAuth.instance
-          .createUserWithEmailAndPassword(email: email, password: senha);
-
-      Provider.of<UserProvider>(context, listen: false).setUser(
-        UserModel(
-          uid: userCredential.user!.uid,
-          displayName: nome,
-          email: email,
-          photoUrl: null,
+  Future<void> cadastrarUser(BuildContext context, String nome, String email,
+      String senha, String senhaConfirm) async {
+    if (senha != senhaConfirm) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Senha diferente da confirmação'),
         ),
       );
+    } else {
+      try {
+        UserCredential userCredential = await FirebaseAuth.instance
+            .createUserWithEmailAndPassword(email: email, password: senha);
 
-      Navigator.of(context).pushNamed('/home');
-    } on FirebaseAuthException catch (e) {
-      if (e.code == 'weak-password') {
-        // ignore: use_build_context_synchronously
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Senha muito fraca'),
+        await userCredential.user!.updateDisplayName(nome);
+        await userCredential.user!.reload();
+        User? updatedUser = FirebaseAuth.instance.currentUser;
+        Provider.of<UserProvider>(context, listen: false).setUser(
+          UserModel(
+            uid: updatedUser!.uid,
+            displayName: updatedUser.displayName,
+            email: updatedUser.email,
+            photoUrl: updatedUser.photoURL,
           ),
         );
-        print('Senha muito fraca');
-      } else if (e.code == 'email-already-in-use') {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Email já existe'),
-          ),
-        );
-        print('Email já existe');
+        await _saveUserData(userCredential.user);
+        Navigator.of(context).pushNamed('/home');
+      } on FirebaseAuthException catch (e) {
+        if (e.code == 'weak-password') {
+          // ignore: use_build_context_synchronously
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Senha muito fraca'),
+            ),
+          );
+          print('Senha muito fraca');
+        } else if (e.code == 'email-already-in-use') {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Email já existe'),
+            ),
+          );
+          print('Email já existe');
+        }
       }
     }
+  }
+
+  Future<void> _saveUserData(User? user) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (user != null) {
+      await prefs.setString('user_uid', user.uid);
+      await prefs.setString('user_email', user.email ?? '');
+      await prefs.setString(
+          'user_displayName', user.displayName ?? 'Usuário'); // Valor padrão
+      await prefs.setString(
+          'user_photoUrl', user.photoURL ?? ''); // Valor padrão para a foto
+      await prefs.setBool('isLoggedIn', true);
+    }
+  }
+
+  Future<UserModel?> loadUserData() async {
+    final prefs = await SharedPreferences.getInstance();
+    String? uid = prefs.getString('user_uid');
+    String? displayName =
+        prefs.getString('user_displayName') ?? 'Usuário'; // Valor padrão
+    String? email = prefs.getString('user_email');
+    String? photoUrl = prefs.getString('user_photoUrl') ?? ''; // Valor padrão
+
+    if (uid != null) {
+      return UserModel(
+        uid: uid,
+        displayName: displayName,
+        email: email,
+        photoUrl: photoUrl,
+      );
+    }
+
+    return null; // Retorna null se não houver dados de usuário salvos
   }
 
   Future<void> redefinirSenha(BuildContext context, String email) async {
@@ -64,6 +110,8 @@ class AuthEmailPasswordService {
     try {
       UserCredential userCredential = await FirebaseAuth.instance
           .signInWithEmailAndPassword(email: email, password: senha);
+
+      await _saveUserData(userCredential.user);
 
       Navigator.of(context).pushNamed('/home');
     } on FirebaseAuthException catch (e) {

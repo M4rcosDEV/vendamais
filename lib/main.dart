@@ -7,6 +7,7 @@ import 'package:vendamais/pages/login_page.dart';
 import 'package:flutter/services.dart';
 import 'package:vendamais/pages/signup_page.dart';
 import 'package:vendamais/providers/user_provider.dart';
+import 'package:vendamais/services/auth_email_password_service.dart';
 
 import './services/amplify_service.dart';
 
@@ -50,6 +51,8 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // final authService = AuthEmailPasswordService();
+    // authService.verificarAutenticacao(context);
     return ChangeNotifierProvider(
       create: (context) => MyAppState(),
       child: MaterialApp(
@@ -71,49 +74,5 @@ class MyApp extends StatelessWidget {
 }
 
 class MyAppState extends ChangeNotifier {
-  String? _imagePath;
-
-  String? get imagePath => _imagePath;
-
-  void updateImage(XFile image) {
-    _imagePath = image.path; // Armazena o caminho da imagem
-    notifyListeners(); // Notifica os ouvintes sobre a alteração
-  }
-
-  XFile? _imageFile;
-  XFile? get imageFile => _imageFile;
-
-  var current = WordPair.random();
-  void getNext() {
-    current = WordPair.random();
-    notifyListeners();
-  }
-
-  var favoritos = <WordPair>[];
-
-  void escolherFavorito() {
-    if (favoritos.contains(current)) {
-      favoritos.remove(current);
-    } else {
-      favoritos.add(current);
-    }
-
-    print(favoritos);
-    notifyListeners();
-  }
-
-  void listarFavoritos() {
-    for (var pair in favoritos) {
-      print(pair);
-    }
-
-    notifyListeners();
-  }
-
-  void removerFavorito(WordPair pair) {
-    favoritos.remove(pair);
-    print('Nome removido : $pair');
-
-    notifyListeners();
-  }
+  
 }
