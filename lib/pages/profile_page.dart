@@ -45,36 +45,44 @@ class _ProfilePageState extends State<ProfilePage> {
       return;
     }
     try {
-      // Fazer upload da imagem para o S3
-      final file = File(image.path);
+      User? user = _auth.currentUser;
+      // Verifica se o usuário está autenticado
+      if (user != null) {
+        // Acessa os dados do provedor de autenticação
+        if (user.providerData.isNotEmpty) {
+          // Obtém o primeiro provedor (geralmente há apenas um)
+          final userId = user.providerData.first.uid;
+          // Fazer upload da imagem para o S3
+          final file = File(image.path);
 
-      final result = await Amplify.Storage.uploadFile(
-        localFile: AWSFile.fromPath(file.path),
-        path: StoragePath.fromString(
-            'user-profile/${file.uri.pathSegments.last}'),
-        onProgress: (progress) {
-          double progressValue =
-              (progress.transferredBytes / progress.totalBytes) * 100;
+          final result = await Amplify.Storage.uploadFile(
+            localFile: AWSFile.fromPath(file.path),
+            path: StoragePath.fromString(
+                'user-profile/$userId/profile.jpg'), // Caminho fixo por usuário
+            onProgress: (progress) {
+              double progressValue =
+                  (progress.transferredBytes / progress.totalBytes) * 100;
+              safePrint(
+                  'Upando nas nuvens: ${progressValue.toStringAsFixed(2)}%'); // Acompanhe o progresso
+            },
+          ).result;
 
-          safePrint(
-              'Upando nas nuvens: ${progressValue.toStringAsFixed(2)}%'); // Acompanhe o progresso
-        },
-      ).result;
+          safePrint('Arquivo enviado com sucesso: ${result.uploadedItem.path}');
+          const String bucketName =
+              'vendamais7a802190a7bd4ab2b3232d43f4c078954b133-dev';
 
-      safePrint('Arquivo enviado com sucesso: ${result.uploadedItem.path}');
-      const String bucketName =
-          'vendamais7a802190a7bd4ab2b3232d43f4c078954b133-dev';
+          String region = 'sa-east-1'; // Região do seu bucket
 
-      String region = 'sa-east-1'; // Região do seu bucket
+          String imageUrl =
+              'https://${bucketName}.s3.${region}.amazonaws.com/user-profile/$userId/profile.jpg';
 
-      String imageUrl =
-          'https://${bucketName}.s3.${region}.amazonaws.com/${result.uploadedItem.path}';
+          print('imageUrl : $imageUrl');
 
-      print('imageUrl : $imageUrl');
+          print('Image Path: ${image.path}'); // Exibe o caminho da imagem
 
-      print('Image Path: ${image.path}'); // Exibe o caminho da imagem
-
-      await _updateUser(imageUrl);
+          await _updateUser(imageUrl);
+        }
+      }
     } on StorageException catch (e) {
       safePrint(e.message);
     }
@@ -159,6 +167,13 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     final user = Provider.of<UserProvider>(context).user;
+
+    final imgProfile = user.photoUrl;
+
+    //Aqui é para força eliminar o cache da img
+    String imgcachebuster =
+        '$imgProfile?cache_buster=${DateTime.now().millisecondsSinceEpoch}';
+
     return Scaffold(
       appBar: AppBar(
         iconTheme:
@@ -173,123 +188,125 @@ class _ProfilePageState extends State<ProfilePage> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            GestureDetector(
-              onTap: _pickImage,
-              child: CircleAvatar(
-                  radius: 50,
-                  backgroundImage:
-                      user.photoUrl != null && user.photoUrl!.isNotEmpty
-                          ? NetworkImage(user.photoUrl!)
-                          : null,
-                  child: user.photoUrl == null || user.photoUrl!.isEmpty
-                      ? const Icon(Icons.person, size: 40)
-                      : null),
+            Center(
+              child: GestureDetector(
+                onTap: _pickImage,
+                child: CircleAvatar(
+                    radius: 50,
+                    backgroundImage:
+                        user.photoUrl != null && user.photoUrl!.isNotEmpty
+                            ? NetworkImage(imgcachebuster)
+                            : null,
+                    child: user.photoUrl == null || user.photoUrl!.isEmpty
+                        ? const Icon(Icons.person, size: 40)
+                        : null),
+              ),
             ),
             SizedBox(height: 16),
-            TextField(
-              controller: _nameController,
-              decoration: InputDecoration(
-                border: InputBorder.none,
-                focusedBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(
-                    color: Theme.of(context).colorScheme.primaryContainer,
-                  ),
-                ),
-                enabledBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(
-                    color: Colors.grey,
-                  ),
-                ),
-                labelText: 'Nome',
-              ),
-            ),
-            TextField(
-              controller: _surnameController,
-              decoration: InputDecoration(
-                border: InputBorder.none,
-                focusedBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(
-                    color: Theme.of(context).colorScheme.primaryContainer,
-                  ),
-                ),
-                enabledBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(
-                    color: Colors.grey,
-                  ),
-                ),
-                labelText: 'Apelido',
-              ),
-            ),
+            // TextField(
+            //   controller: _nameController,
+            //   decoration: InputDecoration(
+            //     border: InputBorder.none,
+            //     focusedBorder: UnderlineInputBorder(
+            //       borderSide: BorderSide(
+            //         color: Theme.of(context).colorScheme.primaryContainer,
+            //       ),
+            //     ),
+            //     enabledBorder: UnderlineInputBorder(
+            //       borderSide: BorderSide(
+            //         color: Colors.grey,
+            //       ),
+            //     ),
+            //     labelText: 'Nome',
+            //   ),
+            // ),
+            // TextField(
+            //   controller: _surnameController,
+            //   decoration: InputDecoration(
+            //     border: InputBorder.none,
+            //     focusedBorder: UnderlineInputBorder(
+            //       borderSide: BorderSide(
+            //         color: Theme.of(context).colorScheme.primaryContainer,
+            //       ),
+            //     ),
+            //     enabledBorder: UnderlineInputBorder(
+            //       borderSide: BorderSide(
+            //         color: Colors.grey,
+            //       ),
+            //     ),
+            //     labelText: 'Apelido',
+            //   ),
+            // ),
 
-            TextField(
-              controller: _emailController,
-              decoration: InputDecoration(
-                border: InputBorder.none,
-                focusedBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(
-                    color: Theme.of(context).colorScheme.primaryContainer,
-                  ),
-                ),
-                enabledBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(
-                    color: Colors.grey,
-                  ),
-                ),
-                labelText: 'Email',
-              ),
-            ),
+            // TextField(
+            //   controller: _emailController,
+            //   decoration: InputDecoration(
+            //     border: InputBorder.none,
+            //     focusedBorder: UnderlineInputBorder(
+            //       borderSide: BorderSide(
+            //         color: Theme.of(context).colorScheme.primaryContainer,
+            //       ),
+            //     ),
+            //     enabledBorder: UnderlineInputBorder(
+            //       borderSide: BorderSide(
+            //         color: Colors.grey,
+            //       ),
+            //     ),
+            //     labelText: 'Email',
+            //   ),
+            // ),
 
             // Campos de Email e Senha lado a lado
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // Campo de Email
-                Expanded(
-                  child: TextField(
-                    controller: _passwordController,
-                    decoration: InputDecoration(
-                      border: InputBorder.none,
-                      focusedBorder: UnderlineInputBorder(
-                        borderSide: BorderSide(
-                          color: Theme.of(context).colorScheme.primaryContainer,
-                        ),
-                      ),
-                      enabledBorder: UnderlineInputBorder(
-                        borderSide: BorderSide(
-                          color: Colors
-                              .grey, // Linha cinza quando não está em foco
-                        ),
-                      ),
-                      labelText: 'Senha',
-                    ),
-                    obscureText: true, // Oculta o texto da senha
-                  ),
-                ),
-                SizedBox(width: 16), // Espaçamento entre os campos
-                // Campo de Senha
-                Expanded(
-                  child: TextField(
-                    controller: _confirmPasswordController,
-                    decoration: InputDecoration(
-                      border: InputBorder.none,
-                      focusedBorder: UnderlineInputBorder(
-                        borderSide: BorderSide(
-                          color: Theme.of(context).colorScheme.primaryContainer,
-                        ),
-                      ),
-                      enabledBorder: UnderlineInputBorder(
-                        borderSide: BorderSide(
-                          color: Colors
-                              .grey, // Linha cinza quando não está em foco
-                        ),
-                      ),
-                      labelText: 'Confirmar senha',
-                    ),
-                    obscureText: true, // Oculta o texto da senha
-                  ),
-                ),
-              ],
-            ),
+            // Row(
+            //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            //   children: [
+            //     // Campo de Email
+            //     Expanded(
+            //       child: TextField(
+            //         controller: _passwordController,
+            //         decoration: InputDecoration(
+            //           border: InputBorder.none,
+            //           focusedBorder: UnderlineInputBorder(
+            //             borderSide: BorderSide(
+            //               color: Theme.of(context).colorScheme.primaryContainer,
+            //             ),
+            //           ),
+            //           enabledBorder: UnderlineInputBorder(
+            //             borderSide: BorderSide(
+            //               color: Colors
+            //                   .grey, // Linha cinza quando não está em foco
+            //             ),
+            //           ),
+            //           labelText: 'Senha',
+            //         ),
+            //         obscureText: true, // Oculta o texto da senha
+            //       ),
+            //     ),
+            //     SizedBox(width: 16), // Espaçamento entre os campos
+            //     // Campo de Senha
+            //     Expanded(
+            //       child: TextField(
+            //         controller: _confirmPasswordController,
+            //         decoration: InputDecoration(
+            //           border: InputBorder.none,
+            //           focusedBorder: UnderlineInputBorder(
+            //             borderSide: BorderSide(
+            //               color: Theme.of(context).colorScheme.primaryContainer,
+            //             ),
+            //           ),
+            //           enabledBorder: UnderlineInputBorder(
+            //             borderSide: BorderSide(
+            //               color: Colors
+            //                   .grey, // Linha cinza quando não está em foco
+            //             ),
+            //           ),
+            //           labelText: 'Confirmar senha',
+            //         ),
+            //         obscureText: true, // Oculta o texto da senha
+            //       ),
+            //     ),
+            //   ],
+            // ),
           ],
         ),
       ),

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:vendamais/pages/tributos_page.dart';
 import 'package:vendamais/providers/user_provider.dart';
 import 'package:vendamais/services/auth_google_service.dart';
 import '../main.dart';
@@ -28,6 +29,13 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     //String? imagePath = Provider.of<MyAppState>(context).imagePath;
     final user = Provider.of<UserProvider>(context).user;
+    print('URL da foto do usuário DEPURACAO NO HOMEPAGE: ${user.photoUrl}');
+    final imgProfile = user.photoUrl;
+
+    //Aqui é para força eliminar o cache da img
+    String imgcachebuster =
+        '$imgProfile?cache_buster=${DateTime.now().millisecondsSinceEpoch}';
+
     return LayoutBuilder(builder: (context, constraints) {
       return Scaffold(
         appBar: AppBar(
@@ -66,7 +74,7 @@ class _MyHomePageState extends State<MyHomePage> {
                               radius: 40,
                               backgroundImage: user.photoUrl != null &&
                                       user.photoUrl!.isNotEmpty
-                                  ? NetworkImage(user.photoUrl!)
+                                  ? NetworkImage(imgcachebuster)
                                   : null,
                               child: user.photoUrl == null ||
                                       user.photoUrl!.isEmpty
@@ -107,8 +115,8 @@ class _MyHomePageState extends State<MyHomePage> {
                 },
               ),
               ListTile(
-                leading: Icon(Icons.sledding),
-                title: Text('Ainda to pensando'),
+                leading: Icon(PhosphorIconsRegular.calculator),
+                title: Text('Cálculo de tributos'),
                 onTap: () {
                   _pageController.jumpToPage(1);
                   Navigator.pop(context);
@@ -189,7 +197,7 @@ class _MyHomePageState extends State<MyHomePage> {
           },
           children: [
             GeneratorPage(),
-            //FavoritesPage(),
+            TributosPage(),
             EmpresasPage(),
             SettingsPage(),
           ],
